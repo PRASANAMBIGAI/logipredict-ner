@@ -3,7 +3,6 @@ from models import District, RoadSegment, IncidentReport, Vehicle, WeatherSnapsh
 import random
 
 def seed_data():
-    Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
 
