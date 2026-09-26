@@ -73,10 +73,10 @@ export default function Landing() {
           
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center relative z-10">
             {[
-              { stat: '30k+', label: 'Field Reports / year', sub: 'Across NER districts' },
-              { stat: '2.9k', label: 'Active partners', sub: 'Carrier network' },
-              { stat: '1,245', label: 'Routes / day', sub: 'Optimized dynamically' },
-              { stat: '5,875', label: 'Anomalies / year', sub: 'Proactively averted' }
+              { stat: '7', label: 'States Covered', sub: 'Across the NER' },
+              { stat: 'Live', label: 'Weather Sync', sub: 'Real-time monitoring' },
+              { stat: '24/7', label: 'Risk Assessment', sub: 'Dynamic hazard routing' },
+              { stat: 'Offline', label: 'Capable App', sub: 'For low-connectivity zones' }
             ].map((item, i) => (
               <div key={i} className="flex flex-col items-center">
                 <div className="w-4 h-4 rounded-full bg-blue-600 ring-4 ring-white mb-6"></div>
@@ -146,7 +146,7 @@ export default function Landing() {
               From heavy manufacturing to high-velocity e-commerce, our tracking system brings stability to the unpredictable terrain of the NER.
             </p>
             <ul className="space-y-4 text-sm font-bold">
-              {['Manufacturing', 'Healthcare & Pharmaceuticals', 'Retail & E-commerce', 'Agricultural Commodities'].map(sector => (
+              {['Essential Supply Logistics', 'Disaster Relief Operations', 'Agricultural Supply Chain', 'Medical Supply Transport'].map(sector => (
                 <li key={sector} className="flex justify-end items-center border-b border-blue-400/30 pb-3">
                   {sector} <ArrowRight className="w-4 h-4 ml-4 text-blue-400" />
                 </li>
@@ -156,43 +156,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* 5. Testimonials */}
-      <section className="max-w-7xl mx-auto px-4 pb-24">
-        <div className="flex justify-between items-end mb-12">
-          <h2 className="text-3xl font-black text-gray-900">TRUSTED BY THE<br />WORLD'S BEST BRANDS</h2>
-          <div className="flex space-x-2">
-            <div className="w-6 h-1.5 rounded-full bg-blue-600"></div>
-            <div className="w-2 h-1.5 rounded-full bg-gray-300"></div>
-            <div className="w-2 h-1.5 rounded-full bg-gray-300"></div>
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[
-            { name: "Anjali Desai", role: "VP Supply Chain", quote: "LogiPredict reduced our delay occurrences by 22% in the first quarter. Their risk inference acts as a radar in blind spots." },
-            { name: "Rajesh Bora", role: "Director of Operations", quote: "We finally have eyes on the Shillong corridor. The offline sync means our drivers are never truly disconnected." },
-            { name: "David P.", role: "CEO, E-comm Logistics", quote: "The proactive rerouting engine saved us over ₹500k in potential spoilage. The intelligence is remarkable." }
-          ].map((t, i) => (
-            <div key={i} className="bg-white border border-gray-100 shadow-sm rounded-3xl p-8 flex flex-col justify-between">
-              <div>
-                <div className="flex text-amber-400 mb-4">
-                  {[...Array(5)].map((_, j) => <Star key={j} className="w-4 h-4 fill-current" />)}
-                </div>
-                <p className="text-gray-600 text-sm italic mb-8">"{t.quote}"</p>
-              </div>
-              <div className="flex items-center">
-                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold mr-3">
-                  {t.name[0]}
-                </div>
-                <div>
-                  <div className="font-bold text-gray-900 text-sm">{t.name}</div>
-                  <div className="text-xs text-gray-500">{t.role}</div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+
 
       {/* 6. Bottom CTA */}
       <section className="max-w-5xl mx-auto px-4 pb-24">
