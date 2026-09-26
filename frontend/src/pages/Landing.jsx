@@ -7,7 +7,7 @@ export default function Landing() {
     <div className="bg-white min-h-screen font-sans text-gray-900 selection:bg-blue-200">
       
       {/* 1. Hero Container Section */}
-      <div className="pt-4 px-4 sm:px-6 lg:px-8">
+      <div id="home" className="pt-4 px-4 sm:px-6 lg:px-8">
         <div className="relative w-full rounded-[2.5rem] overflow-hidden bg-[#0F172A]">
           {/* Background Image & Overlay */}
           <img src="/mountain_highway.png" alt="Hero Background" className="absolute inset-0 w-full h-full object-cover z-0 opacity-60" />
@@ -20,12 +20,11 @@ export default function Landing() {
               <span className="font-bold text-lg tracking-wide">LogiPredict</span>
             </div>
             <div className="hidden md:flex space-x-8 text-sm font-medium text-blue-100">
-              <a href="#" className="hover:text-white transition-colors">Home</a>
-              <a href="#" className="hover:text-white transition-colors">Services</a>
-              <a href="#" className="hover:text-white transition-colors">Solutions</a>
-              <a href="#" className="hover:text-white transition-colors">Network</a>
-              <a href="#" className="hover:text-white transition-colors">About</a>
-              <a href="#" className="hover:text-white transition-colors">Contact</a>
+              <a href="#home" className="hover:text-white transition-colors">Home</a>
+              <a href="#coverage" className="hover:text-white transition-colors">Coverage</a>
+              <a href="#services" className="hover:text-white transition-colors">Services</a>
+              <a href="#sectors" className="hover:text-white transition-colors">Sectors</a>
+              <a href="#contact" className="hover:text-white transition-colors">Contact</a>
             </div>
 
             <div className="flex items-center space-x-4">
@@ -62,7 +61,7 @@ export default function Landing() {
       </div>
 
       {/* 2. Stats Section */}
-      <section className="py-24 max-w-6xl mx-auto px-4">
+      <section id="coverage" className="py-24 max-w-6xl mx-auto px-4">
         <h3 className="text-center text-sm font-bold tracking-widest text-gray-500 uppercase mb-16">
           Built specifically for North East terrain
         </h3>
@@ -90,7 +89,7 @@ export default function Landing() {
       </section>
 
       {/* 3. Services Section */}
-      <section className="max-w-7xl mx-auto px-4 pb-24">
+      <section id="services" className="max-w-7xl mx-auto px-4 pb-24">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8">
           <div>
             <h2 className="text-4xl md:text-5xl font-black text-gray-900 leading-none mb-6">
@@ -135,7 +134,7 @@ export default function Landing() {
       </section>
 
       {/* 4. Sectors Section */}
-      <section className="max-w-7xl mx-auto px-4 pb-24">
+      <section id="sectors" className="max-w-7xl mx-auto px-4 pb-24">
         <div className="relative rounded-[2.5rem] overflow-hidden min-h-[500px] flex items-center justify-end p-12 lg:p-24">
           <img src="/container_crane.png" alt="Sectors" className="absolute inset-0 w-full h-full object-cover z-0" />
           <div className="absolute inset-0 bg-gradient-to-r from-transparent to-blue-900/90 z-10"></div>
@@ -159,7 +158,7 @@ export default function Landing() {
 
 
       {/* 6. Bottom CTA */}
-      <section className="max-w-5xl mx-auto px-4 pb-24">
+      <section id="contact" className="max-w-5xl mx-auto px-4 pb-24">
         <div className="relative rounded-3xl overflow-hidden p-12 md:p-20 shadow-2xl">
           <img src="/truck_landscape.png" alt="Highway" className="absolute inset-0 w-full h-full object-cover z-0" />
           <div className="absolute inset-0 bg-blue-900/60 z-10 backdrop-blur-[2px]"></div>
