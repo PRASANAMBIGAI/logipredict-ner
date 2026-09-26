@@ -189,7 +189,7 @@ async def chat_with_copilot(req: ChatRequest, db: Session = Depends(get_db)):
     context += "Answer concisely and professionally."
     
     try:
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-1.5-flash-latest')
         response = model.generate_content(context)
         return {"response": response.text.strip()}
     except Exception as e:
@@ -284,7 +284,7 @@ async def analyze_vision(req: VisionRequest):
             
         image_bytes = base64.b64decode(base64_data)
         
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-1.5-flash-latest')
         prompt = f"You are an AI computer vision agent for a logistics dashboard in the North Eastern Region of India. The field officer has selected the incident type as '{req.incident_type}'. Analyze this image and provide a highly technical, realistic assessment of what you see. Keep it under 3 sentences. Start with '[AI VISION REPORT] Analysis:'."
         
         image_parts = [
