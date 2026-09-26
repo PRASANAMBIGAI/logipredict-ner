@@ -11,11 +11,12 @@ import math
 import base64
 import google.generativeai as genai
 import os
+from dotenv import load_dotenv
+load_dotenv()
 
 api_key = os.environ.get("GEMINI_API_KEY", "")
 if api_key:
     genai.configure(api_key=api_key)
-
 # Create tables if not exist (mostly handled by seed, but good to have)
 Base.metadata.create_all(bind=engine)
 
@@ -159,6 +160,40 @@ def compute_route(request: schemas.RouteRequest, db: Session = Depends(get_db)):
         from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="No route found between these districts.")
     return route
+
+class ChatRequest(BaseModel):
+    message: str
+
+@app.post("/api/chat")
+async def chat_with_copilot(req: ChatRequest, db: Session = Depends(get_db)):
+    if not api_key:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=500, detail="Gemini API Key is missing on the server.")
+        
+    districts = db.query(models.District).all()
+    segments = db.query(models.RoadSegment).all()
+    incidents = db.query(models.IncidentReport).all()
+    
+    context = "System Context for AI Copilot:\n"
+    context += "You are LogiPredict AI, an advanced logistics routing and risk assessment assistant for the North Eastern Region (NER) of India.\n"
+    context += "Current Road Risks:\n"
+    for s in segments:
+        if s.current_risk_score > 50:
+            context += f"- High Risk: {s.name} (Risk Score: {s.current_risk_score})\n"
+    
+    context += "\nActive Incidents:\n"
+    for i in incidents:
+        context += f"- {i.incident_type} (Severity: {i.severity}) at Lat: {i.lat}, Lng: {i.lng}. Notes: {i.notes}\n"
+        
+    context += f"\nUser Query: {req.message}\n"
+    context += "Answer concisely and professionally."
+    
+    try:
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        response = model.generate_content(context)
+        return {"response": response.text.strip()}
+    except Exception as e:
+        return {"response": f"Error consulting AI model: {str(e)}"}
 
 class WeatherSimRequest(BaseModel):
     active: bool

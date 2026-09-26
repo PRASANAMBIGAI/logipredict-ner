@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { api, getWsUrl } from '../utils/api';
 import { APIProvider, Map, AdvancedMarker, Pin, InfoWindow, useMap } from '@vis.gl/react-google-maps';
-import { AlertTriangle, Activity, Navigation2, CheckCircle, TrendingUp, CloudRain, Sun, Cloud, CloudLightning } from 'lucide-react';
+import { AlertTriangle, Activity, Navigation2, CheckCircle, TrendingUp, CloudRain, Sun, Cloud, CloudLightning, Bot } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.GOOGLE_MAPS_API_KEY || import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
@@ -66,6 +66,13 @@ export default function Dashboard() {
   const [selectedSegment, setSelectedSegment] = useState(null);
   const [forecastData, setForecastData] = useState(null);
   const [loadingForecast, setLoadingForecast] = useState(false);
+  
+  // Chat States
+  const [chatMessage, setChatMessage] = useState('');
+  const [chatHistory, setChatHistory] = useState([
+      { role: 'ai', content: 'Hello! I am LogiPredict Copilot. How can I assist you with NER logistics today?' }
+  ]);
+  const [isChatting, setIsChatting] = useState(false);
   
   // InfoWindow states
   const [openInfoWindow, setOpenInfoWindow] = useState(null); // { type: 'district' | 'incident' | 'vehicle', data: object }
@@ -164,6 +171,25 @@ export default function Dashboard() {
       console.error(e);
     } finally {
       setLoadingForecast(false);
+    }
+  };
+
+  const handleChatSubmit = async (e) => {
+    e.preventDefault();
+    if (!chatMessage.trim()) return;
+    
+    const userMsg = chatMessage;
+    setChatMessage('');
+    setChatHistory(prev => [...prev, { role: 'user', content: userMsg }]);
+    setIsChatting(true);
+    
+    try {
+        const res = await api.post('/api/chat', { message: userMsg });
+        setChatHistory(prev => [...prev, { role: 'ai', content: res.data.response }]);
+    } catch (e) {
+        setChatHistory(prev => [...prev, { role: 'ai', content: 'Sorry, I am offline right now.' }]);
+    } finally {
+        setIsChatting(false);
     }
   };
 
@@ -324,6 +350,33 @@ export default function Dashboard() {
 
       {/* Right Panel: Controls & Feeds */}
       <div className="w-full md:w-[400px] flex flex-col gap-4 overflow-y-auto pr-2 custom-scrollbar">
+        
+        {/* AI Copilot Widget */}
+        <div className="glass-panel p-5 flex flex-col max-h-[300px]">
+          <h2 className="text-sm font-bold text-blue-700 mb-4 flex items-center">
+            <Bot className="w-4 h-4 mr-2" /> LOGIPREDICT COPILOT
+          </h2>
+          <div className="flex-1 overflow-y-auto mb-3 space-y-2 pr-2 text-sm custom-scrollbar">
+            {chatHistory.map((msg, idx) => (
+              <div key={idx} className={`p-2 rounded max-w-[85%] ${msg.role === 'ai' ? 'bg-blue-50 text-blue-900 border border-blue-100 self-start mr-auto' : 'bg-gray-100 text-gray-800 border border-gray-200 ml-auto'}`}>
+                {msg.content}
+              </div>
+            ))}
+            {isChatting && <div className="text-xs text-gray-400 italic">Thinking...</div>}
+          </div>
+          <form onSubmit={handleChatSubmit} className="flex gap-2">
+            <input 
+              type="text" 
+              value={chatMessage} 
+              onChange={(e) => setChatMessage(e.target.value)} 
+              placeholder="Ask about routes, weather..." 
+              className="flex-1 bg-white border border-gray-300 rounded p-2 text-sm outline-none focus:border-blue-500"
+            />
+            <button type="submit" disabled={isChatting || !chatMessage.trim()} className="bg-blue-600 text-white px-3 rounded font-bold hover:bg-blue-500 disabled:opacity-50 text-sm">
+              Ask
+            </button>
+          </form>
+        </div>
         
         {/* Route Planner Widget */}
         <div className="glass-panel p-5">
