@@ -17,9 +17,8 @@ export default function Landing() {
           <nav className="flex justify-between items-center px-8 py-6 relative z-20">
             <div className="flex items-center text-white space-x-2">
               <Box className="w-6 h-6 text-blue-400" />
-              <span className="font-bold text-lg tracking-wide">LogiPredict<span className="text-blue-400">AI</span></span>
+              <span className="font-bold text-lg tracking-wide">LogiPredict</span>
             </div>
-            
             <div className="hidden md:flex space-x-8 text-sm font-medium text-blue-100">
               <a href="#" className="hover:text-white transition-colors">Home</a>
               <a href="#" className="hover:text-white transition-colors">Services</a>
@@ -40,7 +39,7 @@ export default function Landing() {
           {/* Hero Content */}
           <div className="relative z-30 pt-20 pb-48 px-4 text-center max-w-4xl mx-auto">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-medium text-white leading-tight mb-8 drop-shadow-lg">
-              Tailored intelligence for NER logistics — road, weather, and fleet routing unified on a single platform.
+              Keep your fleet moving across the North East. Real-time weather, route tracking, and hazard alerts in one platform.
             </h1>
             <div className="flex justify-center space-x-4">
               <Link to="/dashboard" className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-full font-medium flex items-center transition-colors">
@@ -65,7 +64,7 @@ export default function Landing() {
       {/* 2. Stats Section */}
       <section className="py-24 max-w-6xl mx-auto px-4">
         <h3 className="text-center text-sm font-bold tracking-widest text-gray-500 uppercase mb-16">
-          Tailored Intelligence For Your Logistics Requirements
+          Built specifically for North East terrain
         </h3>
         
         <div className="relative">
@@ -122,7 +121,7 @@ export default function Landing() {
                 <div className="w-5 h-5 rounded-full border-2 border-blue-600 flex items-center justify-center mr-3">
                   <div className="w-2.5 h-2.5 rounded-full bg-blue-600"></div>
                 </div>
-                Dedicated AI Risk Inference Engine
+                Automated hazard detection
               </li>
               <li className="flex items-center text-sm font-bold text-gray-700">
                 <div className="w-5 h-5 rounded-full border-2 border-blue-600 flex items-center justify-center mr-3">
@@ -144,7 +143,7 @@ export default function Landing() {
           <div className="relative z-20 max-w-md text-white text-right">
             <h2 className="text-4xl font-black mb-6 leading-tight">SERVING BUSINESSES<br />ACROSS SECTORS</h2>
             <p className="text-blue-100 mb-10 text-sm leading-relaxed">
-              From heavy manufacturing to high-velocity e-commerce, our AI infrastructure brings stability to the unpredictable terrain of the NER.
+              From heavy manufacturing to high-velocity e-commerce, our tracking system brings stability to the unpredictable terrain of the NER.
             </p>
             <ul className="space-y-4 text-sm font-bold">
               {['Manufacturing', 'Healthcare & Pharmaceuticals', 'Retail & E-commerce', 'Agricultural Commodities'].map(sector => (
@@ -221,10 +220,10 @@ export default function Landing() {
           <div className="mb-10 md:mb-0 max-w-xs">
             <div className="flex items-center space-x-2 mb-6">
               <Box className="w-6 h-6 text-blue-500" />
-              <span className="font-bold text-xl tracking-wide">LogiPredict<span className="text-blue-500">AI</span></span>
+              <span className="font-bold text-xl tracking-wide">LogiPredict</span>
             </div>
             <p className="text-sm text-gray-400 leading-relaxed mb-6">
-              Global logistics intelligence built for businesses that demand reliability, predictability, and total supply chain visibility.
+              Logistics tracking built for businesses that demand reliability and total supply chain visibility across the North East.
             </p>
             <div className="text-gray-400 text-sm space-y-2">
               <div>+91 (800) 123-4567</div>
@@ -270,7 +269,7 @@ export default function Landing() {
             LOGIPREDICT
           </div>
           <div className="max-w-7xl mx-auto px-4 flex justify-between text-xs text-gray-600 mt-4">
-            <div>© 2026 LogiPredict AI. All rights reserved.</div>
+            <div>© 2026 LogiPredict. All rights reserved.</div>
             <div className="space-x-4">
               <a href="#" className="hover:text-gray-300">Privacy Policy</a>
               <a href="#" className="hover:text-gray-300">Terms of Service</a>
