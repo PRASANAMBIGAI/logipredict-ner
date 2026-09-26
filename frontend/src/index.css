@@ -40,7 +40,4 @@
   background: #9CA3AF;
 }
 
-/* Leaflet light mode tweaks - No inversion needed for standard OSM tiles */
-.leaflet-container {
-  background-color: #E5E7EB !important;
-}
+

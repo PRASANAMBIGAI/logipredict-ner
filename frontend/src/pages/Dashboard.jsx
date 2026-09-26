@@ -1,23 +1,57 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { api, getWsUrl } from '../utils/api';
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
-import { AlertTriangle, Activity, Navigation2, CheckCircle, TrendingUp } from 'lucide-react';
+import { APIProvider, Map, AdvancedMarker, Pin, InfoWindow, useMap } from '@vis.gl/react-google-maps';
+import { AlertTriangle, Activity, Navigation2, CheckCircle, TrendingUp, CloudRain, Sun, Cloud, CloudLightning } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import L from 'leaflet';
 
-// Fix leaflet default icon
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-});
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+const OPENWEATHER_API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY;
 
 const getRiskColor = (score) => {
   if (score < 30) return '#52c41a'; // green
   if (score < 60) return '#faad14'; // amber
   return '#ff4d4f'; // red
+};
+
+// Custom Polyline Component for Google Maps
+const Polyline = ({ path, options, onClick }) => {
+  const map = useMap();
+  const polylineRef = useRef(null);
+
+  useEffect(() => {
+    if (!polylineRef.current && window.google) {
+      polylineRef.current = new window.google.maps.Polyline(options);
+      
+      if (onClick) {
+        polylineRef.current.addListener('click', onClick);
+      }
+    }
+    if (polylineRef.current) {
+        polylineRef.current.setOptions(options);
+        polylineRef.current.setPath(path);
+    }
+  }, [path, options, onClick]);
+
+  useEffect(() => {
+    if (polylineRef.current && map) {
+      polylineRef.current.setMap(map);
+    }
+    return () => {
+      if (polylineRef.current) {
+        polylineRef.current.setMap(null);
+      }
+    };
+  }, [map]);
+
+  return null;
+};
+
+const WeatherIcon = ({ condition }) => {
+    const code = condition?.toLowerCase() || '';
+    if (code.includes('rain') || code.includes('drizzle')) return <CloudRain className="w-4 h-4 text-blue-500" />;
+    if (code.includes('thunderstorm')) return <CloudLightning className="w-4 h-4 text-yellow-500" />;
+    if (code.includes('cloud')) return <Cloud className="w-4 h-4 text-gray-400" />;
+    return <Sun className="w-4 h-4 text-yellow-400" />;
 };
 
 export default function Dashboard() {
@@ -27,18 +61,27 @@ export default function Dashboard() {
   const [dest, setDest] = useState('');
   const [loadingRoute, setLoadingRoute] = useState(false);
   const [optMode, setOptMode] = useState('fastest');
-  const [weatherRadar, setWeatherRadar] = useState(false);
+  const [weatherData, setWeatherData] = useState({});
   const [droneDispatched, setDroneDispatched] = useState(false);
   const [selectedSegment, setSelectedSegment] = useState(null);
   const [forecastData, setForecastData] = useState(null);
   const [loadingForecast, setLoadingForecast] = useState(false);
+  
+  // InfoWindow states
+  const [openInfoWindow, setOpenInfoWindow] = useState(null); // { type: 'district' | 'incident' | 'vehicle', data: object }
 
   useEffect(() => {
     let ws;
     let pollInterval;
     
-    const fetchData = () => {
-      api.get('/api/dashboard').then(res => setData(res.data)).catch(console.error);
+    const fetchData = async () => {
+      try {
+        const res = await api.get('/api/dashboard');
+        setData(res.data);
+        fetchWeatherForDistricts(res.data.districts);
+      } catch (e) {
+        console.error(e);
+      }
     };
     
     // Initial fetch
@@ -74,10 +117,23 @@ export default function Dashboard() {
     };
   }, []);
 
-  const toggleWeather = async () => {
-    const newState = !weatherRadar;
-    setWeatherRadar(newState);
-    await api.post('/api/weather/toggle', { active: newState });
+  const fetchWeatherForDistricts = async (districts) => {
+      if (!OPENWEATHER_API_KEY) return;
+      const weatherUpdates = {};
+      for (const d of districts) {
+          try {
+              const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${d.lat}&lon=${d.lng}&appid=${OPENWEATHER_API_KEY}&units=metric`);
+              const wData = await res.json();
+              weatherUpdates[d.id] = {
+                  temp: Math.round(wData.main.temp),
+                  condition: wData.weather[0].main,
+                  desc: wData.weather[0].description
+              };
+          } catch (e) {
+              console.error(`Failed to fetch weather for ${d.name}`, e);
+          }
+      }
+      setWeatherData(prev => ({...prev, ...weatherUpdates}));
   };
 
   const handleRouteRequest = async () => {
@@ -119,107 +175,151 @@ export default function Dashboard() {
       <div className="flex-1 glass-panel flex flex-col overflow-hidden relative">
         <div className="absolute top-4 left-4 z-[1000] glass-panel px-4 py-2 text-sm font-semibold tracking-wider text-textMain shadow-lg flex items-center gap-4">
           GIS CONTROL TOWER
-          
-          <button 
-            onClick={toggleWeather}
-            className={`px-3 py-1 text-xs rounded-full font-bold transition-colors ${weatherRadar ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
-          >
-            {weatherRadar ? 'MONSOON RADAR: ACTIVE' : 'WEATHER RADAR: OFF'}
-          </button>
-        </div>
-        
-        {weatherRadar && (
-          <div className="absolute inset-0 z-[500] pointer-events-none bg-blue-900/20 mix-blend-multiply" />
-        )}
-
-        <MapContainer center={[25.5788, 92.5]} zoom={7} className="flex-1 w-full z-0" style={{ background: '#E5E7EB' }}>
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/">OSM</a>'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            className="map-tiles"
-          />
-          
-          {droneDispatched && routePlan && (
-            <Polyline 
-              positions={[
-                [data.districts.find(d => d.id === parseInt(origin)).lat, data.districts.find(d => d.id === parseInt(origin)).lng],
-                [data.districts.find(d => d.id === parseInt(dest)).lat, data.districts.find(d => d.id === parseInt(dest)).lng]
-              ]}
-              color="#3b82f6"
-              weight={4}
-              dashArray="5, 10"
-              className="animate-pulse"
-            />
+          {Object.keys(weatherData).length > 0 && (
+             <span className="text-xs flex items-center gap-1 text-green-700 bg-green-100 px-2 py-1 rounded">
+                 <CheckCircle className="w-3 h-3" /> Live Weather Sync
+             </span>
           )}
-          
-          {/* Render Districts (Cities) */}
-          {data.districts.map(d => (
-            <Marker 
-              key={`dist-${d.id}`} 
-              position={[d.lat, d.lng]}
-              icon={new L.DivIcon({
-                className: 'custom-district-icon',
-                html: `<div style="background-color: #1e3a8a; color: white; border-radius: 50%; width: 12px; height: 12px; border: 2px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.5);"></div>`,
-                iconSize: [12, 12],
-                iconAnchor: [6, 6]
-              })}
-            >
-              <Popup>
-                <div className="font-bold text-blue-900">{d.name}</div>
-                <div className="text-xs text-gray-600">Distribution Hub</div>
-              </Popup>
-            </Marker>
-          ))}
-          
-          {/* Render Segments */}
-          {data.segments.map(seg => (
-            <Polyline 
-              key={`seg-${seg.id}`}
-              positions={[[seg.start_lat, seg.start_lng], [seg.end_lat, seg.end_lng]]}
-              color={selectedSegment?.id === seg.id ? '#8b5cf6' : getRiskColor(seg.current_risk_score)}
-              weight={routePlan?.primary_route.includes(seg.id) || selectedSegment?.id === seg.id ? 8 : 4}
-              opacity={routePlan?.primary_route.includes(seg.id) || selectedSegment?.id === seg.id ? 1 : 0.85}
-              dashArray={routePlan?.primary_route.includes(seg.id) ? "10, 10" : null}
-              eventHandlers={{ click: () => handleSegmentClick(seg) }}
-            >
-              <Popup>
-                <div className="text-gray-900 font-sans">
-                  <strong>{seg.name}</strong><br/>
-                  Risk Score: {seg.current_risk_score.toFixed(1)}<br/>
-                  Distance: {seg.distance_km} km<br/>
-                  <span className="text-xs text-brandAccent">Click segment for AI Prediction</span>
-                </div>
-              </Popup>
-            </Polyline>
-          ))}
+        </div>
 
-          {/* Render Vehicles */}
-          {data.vehicles.map(v => (
-            <Marker key={`veh-${v.id}`} position={[v.current_lat, v.current_lng]}>
-              <Popup>
-                <div className="text-gray-900">
-                  <strong>{v.vehicle_number}</strong><br/>
-                  Cargo: {v.cargo_type}<br/>
-                  Status: {v.status}
-                </div>
-              </Popup>
-            </Marker>
-          ))}
-          
-          {/* Render Incidents */}
-          {data.incidents.map(inc => (
-            <Marker key={`inc-${inc.id}`} position={[inc.lat, inc.lng]}>
-              <Popup>
-                <div className="text-gray-900">
-                  <strong>{inc.incident_type.toUpperCase()}</strong><br/>
-                  Severity: {inc.severity}<br/>
-                  Reporter: {inc.reporter_name}<br/>
-                  {inc.notes}
-                </div>
-              </Popup>
-            </Marker>
-          ))}
-        </MapContainer>
+        <APIProvider apiKey={GOOGLE_MAPS_API_KEY}>
+            <Map 
+                defaultCenter={{ lat: 25.5788, lng: 92.5 }} 
+                defaultZoom={7} 
+                mapId="logipredict_map"
+                disableDefaultUI={true}
+                zoomControl={true}
+                className="flex-1 w-full z-0"
+            >
+                {/* Segments */}
+                {data.segments.map(seg => {
+                    const isSelected = selectedSegment?.id === seg.id;
+                    const isRouted = routePlan?.primary_route.includes(seg.id);
+                    const isHoverable = true; // Google maps polylines hover logic can be added via events if needed
+                    return (
+                        <Polyline 
+                            key={`seg-${seg.id}`}
+                            path={[
+                                {lat: seg.start_lat, lng: seg.start_lng},
+                                {lat: seg.end_lat, lng: seg.end_lng}
+                            ]}
+                            options={{
+                                strokeColor: isSelected ? '#8b5cf6' : getRiskColor(seg.current_risk_score),
+                                strokeOpacity: (isRouted || isSelected) ? 1.0 : 0.85,
+                                strokeWeight: (isRouted || isSelected) ? 8 : 4,
+                                clickable: true,
+                            }}
+                            onClick={() => handleSegmentClick(seg)}
+                        />
+                    )
+                })}
+
+                {/* Drone Route */}
+                {droneDispatched && routePlan && (
+                    <Polyline 
+                         path={[
+                            {lat: data.districts.find(d => d.id === parseInt(origin)).lat, lng: data.districts.find(d => d.id === parseInt(origin)).lng},
+                            {lat: data.districts.find(d => d.id === parseInt(dest)).lat, lng: data.districts.find(d => d.id === parseInt(dest)).lng}
+                         ]}
+                         options={{
+                             strokeColor: '#3b82f6',
+                             strokeOpacity: 0.8,
+                             strokeWeight: 4,
+                             geodesic: true // Makes it a curved line
+                         }}
+                    />
+                )}
+
+                {/* Districts */}
+                {data.districts.map(d => (
+                    <AdvancedMarker 
+                        key={`dist-${d.id}`} 
+                        position={{ lat: d.lat, lng: d.lng }}
+                        onClick={() => setOpenInfoWindow({ type: 'district', data: d })}
+                    >
+                        <div className="bg-blue-900 border-2 border-white rounded-full flex flex-col items-center justify-center p-1 shadow-lg transform transition-transform hover:scale-110">
+                             <div className="w-3 h-3 bg-white rounded-full"></div>
+                        </div>
+                    </AdvancedMarker>
+                ))}
+
+                {/* Vehicles */}
+                {data.vehicles.map(v => (
+                    <AdvancedMarker 
+                        key={`veh-${v.id}`} 
+                        position={{ lat: v.current_lat, lng: v.current_lng }}
+                        onClick={() => setOpenInfoWindow({ type: 'vehicle', data: v })}
+                    >
+                        <Pin background={'#0f172a'} glyphColor={'white'} borderColor={'#0f172a'} />
+                    </AdvancedMarker>
+                ))}
+
+                {/* Incidents */}
+                {data.incidents.map(inc => (
+                    <AdvancedMarker 
+                        key={`inc-${inc.id}`} 
+                        position={{ lat: inc.lat, lng: inc.lng }}
+                        onClick={() => setOpenInfoWindow({ type: 'incident', data: inc })}
+                    >
+                        <div className="bg-red-500 rounded-full p-1 shadow-md animate-pulse">
+                            <AlertTriangle className="w-4 h-4 text-white" />
+                        </div>
+                    </AdvancedMarker>
+                ))}
+
+                {/* Info Windows */}
+                {openInfoWindow && openInfoWindow.type === 'district' && (
+                    <InfoWindow 
+                        position={{ lat: openInfoWindow.data.lat, lng: openInfoWindow.data.lng }}
+                        onCloseClick={() => setOpenInfoWindow(null)}
+                        pixelOffset={[0, -20]}
+                    >
+                        <div className="p-1 font-sans text-gray-900 min-w-[120px]">
+                            <div className="font-bold text-blue-900 text-sm">{openInfoWindow.data.name}</div>
+                            <div className="text-xs text-gray-600 mb-2">Distribution Hub</div>
+                            
+                            {weatherData[openInfoWindow.data.id] && (
+                                <div className="border-t pt-2 mt-1 flex items-center gap-2">
+                                    <WeatherIcon condition={weatherData[openInfoWindow.data.id].condition} />
+                                    <div>
+                                        <div className="font-bold text-lg leading-none">{weatherData[openInfoWindow.data.id].temp}°C</div>
+                                        <div className="text-[10px] text-gray-500 capitalize">{weatherData[openInfoWindow.data.id].desc}</div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </InfoWindow>
+                )}
+
+                {openInfoWindow && openInfoWindow.type === 'vehicle' && (
+                    <InfoWindow 
+                        position={{ lat: openInfoWindow.data.current_lat, lng: openInfoWindow.data.current_lng }}
+                        onCloseClick={() => setOpenInfoWindow(null)}
+                    >
+                         <div className="text-gray-900 font-sans p-1">
+                            <strong className="text-sm">{openInfoWindow.data.vehicle_number}</strong><br/>
+                            <span className="text-xs">Cargo: {openInfoWindow.data.cargo_type}</span><br/>
+                            <span className="text-xs font-semibold text-blue-600">Status: {openInfoWindow.data.status}</span>
+                        </div>
+                    </InfoWindow>
+                )}
+
+                 {openInfoWindow && openInfoWindow.type === 'incident' && (
+                    <InfoWindow 
+                        position={{ lat: openInfoWindow.data.lat, lng: openInfoWindow.data.lng }}
+                        onCloseClick={() => setOpenInfoWindow(null)}
+                    >
+                         <div className="text-gray-900 font-sans p-1 max-w-[200px]">
+                            <strong className="text-sm text-red-600">{openInfoWindow.data.incident_type.toUpperCase()}</strong><br/>
+                            <span className="text-xs">Severity: {openInfoWindow.data.severity}</span><br/>
+                            <span className="text-xs text-gray-500">By: {openInfoWindow.data.reporter_name}</span><br/>
+                            <p className="text-xs mt-1 bg-gray-50 p-1 rounded border">{openInfoWindow.data.notes}</p>
+                        </div>
+                    </InfoWindow>
+                )}
+
+            </Map>
+        </APIProvider>
       </div>
 
       {/* Right Panel: Controls & Feeds */}
@@ -330,7 +430,7 @@ export default function Dashboard() {
                 </ResponsiveContainer>
               </div>
               <div className="mt-3 p-2 bg-purple-50 border border-purple-200 rounded text-[10px] text-purple-900 leading-tight">
-                <strong>Model Inference:</strong> Based on historical geology (Base Risk: {forecastData.base_risk}) and simulated monsoon saturation patterns, this segment has an estimated {forecastData.forecast[6].probability}% probability of blockage within 7 days.
+                <strong>Model Inference:</strong> Based on historical geology (Base Risk: {forecastData.base_risk}) and real-time inputs, this segment has an estimated {forecastData.forecast[6].probability}% probability of blockage within 7 days.
                 {forecastData.forecast[6].probability > 80 && " Pre-emptive rerouting highly recommended."}
               </div>
             </div>
