@@ -14,7 +14,7 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
-api_key = os.environ.get("GEMINI_API_KEY", "")
+api_key = os.environ.get("AI_COPILOT", "")
 if api_key:
     genai.configure(api_key=api_key)
 # Create tables if not exist (mostly handled by seed, but good to have)
@@ -168,7 +168,7 @@ class ChatRequest(BaseModel):
 async def chat_with_copilot(req: ChatRequest, db: Session = Depends(get_db)):
     if not api_key:
         from fastapi import HTTPException
-        raise HTTPException(status_code=500, detail="Gemini API Key is missing on the server.")
+        raise HTTPException(status_code=500, detail="AI_COPILOT key is missing on the server.")
         
     districts = db.query(models.District).all()
     segments = db.query(models.RoadSegment).all()
