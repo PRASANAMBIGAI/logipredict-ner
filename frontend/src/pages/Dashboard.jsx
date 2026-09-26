@@ -4,8 +4,8 @@ import { APIProvider, Map, AdvancedMarker, Pin, InfoWindow, useMap } from '@vis.
 import { AlertTriangle, Activity, Navigation2, CheckCircle, TrendingUp, CloudRain, Sun, Cloud, CloudLightning } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
-const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-const OPENWEATHER_API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY;
+const GOOGLE_MAPS_API_KEY = import.meta.env.GOOGLE_MAPS_API_KEY || import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+const OPENWEATHER_API_KEY = import.meta.env.OPENWEATHER_API_KEY || import.meta.env.VITE_OPENWEATHER_API_KEY;
 
 const getRiskColor = (score) => {
   if (score < 30) return '#52c41a'; // green
